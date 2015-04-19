@@ -1,0 +1,340 @@
+<html>
+<head>
+<style type="text/css">
+body
+{
+    background-image: url('background.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+
+tr{
+
+}
+
+td
+{
+    color: white;
+    verical-align: middle;
+}
+
+.eachUser{
+  text-align: center;
+}
+
+.image1 {
+    z-index: 1;
+    width: 50px;
+    height: 50px;
+}
+
+.image2 {
+    height: 40px;
+    left: 1px;
+    position: relative;
+    top: -45px;
+    width: 40px;
+    z-index: 2;
+}
+
+.tdLeft{
+  width: 40px;
+}
+
+.tdRightWithImage{
+  padding-bottom: 8px;
+}
+
+.frameDiv{
+    max-height: 50px;
+    max-width: 50px;
+}
+
+.expandImage1 {
+    z-index: 1;
+    width: 150px;
+    height: 150px;
+}
+
+.expandImage2 {
+	height: 120px;
+	left: 1px;
+	position: relative;
+	top: -135px;
+	width: 120px;
+	z-index: 2;
+}
+
+.expandFrameDiv{
+    max-height: 150px;
+    max-width: 150px;
+}
+
+</style>
+<!--using 2.1.0 jquery-->
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript">
+
+password_prompt = false;
+selected_user = null;
+time_remaining = 0
+
+function show_prompt(text)
+{
+   password_prompt = true;
+
+   //label = document.getElementById('password_prompt');
+   //label.innerHTML = text;
+   
+   user_table = document.getElementById('user_table');   
+   for (i in user_table.rows)
+   {
+       row = user_table.rows[i];
+       if (row.id != ('user_' + selected_user) && row.style != null) // FIXME: Don't know why there are rows with styles
+          row.style.opacity = 1;  //LJE: I fixed this to not change the opacity
+   }
+
+   //entry = document.getElementById('password_entry');
+   //entry.value = '';
+
+   table = document.getElementById('password_table');
+   table.style.visibility = "visible";
+
+   entry.focus();
+}
+
+function show_message(text)
+{
+   table = document.getElementById('message_table');
+   //label = document.getElementById('message_label');
+   //label.innerHTML = text;
+   if (text.length > 0)
+       table.style.visibility = "visible";
+   else
+       table.style.visibility = "hidden";
+}
+
+function show_error(text)
+{
+   show_message (text);
+}
+
+function reset()
+{
+   user_table = document.getElementById('user_table');   
+   for (i in user_table.rows)
+   {
+       row = user_table.rows[i];
+       if (row.style != null) // FIXME: Don't know why there are rows with styles
+          row.style.opacity = 1;
+   }
+   table = document.getElementById('password_table');
+   table.style.visibility = "hidden";
+   password_prompt = false;
+}
+
+loading_text = ''
+
+function throbber()
+{
+   loading_text += '.';
+   if (loading_text == '....')
+       loading_text = '.'
+   label = document.getElementById('countdown_label');
+   label.innerHTML = loading_text;
+   setTimeout('throbber()', 1000);
+}
+
+function authentication_complete()
+{
+   if (lightdm.is_authenticated)
+       lightdm.login (lightdm.authentication_user, lightdm.default_session);
+   else
+       show_message ("Authentication Failed");
+
+   reset ();
+   setTimeout('throbber()', 1000);
+}
+
+function timed_login(user)
+{
+   lightdm.login (lightdm.timed_login_user);
+   setTimeout('throbber()', 1000);
+}
+
+function start_authentication(username)
+{
+   lightdm.cancel_timed_login ();
+   label = document.getElementById('countdown_label');
+   if (label != null)
+       label.style.visibility = "hidden";
+
+   show_message("");
+   if (!password_prompt) {
+       selected_user = username;
+       lightdm.start_authentication(username);
+   }
+}
+
+function provide_secret()
+{
+   entry = document.getElementById('password_entry');
+   lightdm.provide_secret(entry.value);
+}
+
+function countdown()
+{
+   label = document.getElementById('countdown_label');
+   label.innerHTML = ' in ' + time_remaining + ' seconds'
+   time_remaining--;
+   if (time_remaining >= 0)
+       setTimeout('countdown()', 1000);
+}
+
+function selectedThisUser(UserId)
+{
+	//Need to set the visibility of all the userID to become hide
+	eachUserTableElem=document.getElementsByClassName("eachUser")
+	for (i=0;i<eachUserTableElem.length;i++)
+	{
+		
+		eachUserTableElem[0].setAttribute("style","visibility:hidden");
+	}
+	
+	//Only show this userOnly
+	thisUser = document.getElementById(UserId).getElementsByClassName("eachUser");
+	thisUser[0].setAttribute("style","visibility:visible");
+
+	//expand the image to a bigger version	
+        //alert(UserId);
+	image1 = document.getElementById(UserId).getElementsByClassName("image1");
+	image1[0].className = "expandImage1";
+	image2 = document.getElementById(UserId).getElementsByClassName("image2");
+	image2[0].className = "expandImage2";
+	
+	//expand the div that encapsulate the overllapped picture
+	frameDiv = $("#"+UserId +" div").attr("class","expandFrameDiv");	
+
+	//resize so that it is smaller, so that expanded profile frame looks as if it has moved up
+	$("#divAboveFrame").css("height","10vh");
+	
+	//resize the font of the eachuser UserName
+	$(".eachUser").css("font-size","x-large");
+
+	//refresh the mainframe shifted to the middle
+	$("#mainFrame").css("top","30%");
+	$("#mainFrame").css("left","50%");
+	
+	//refresh so that user profile is centrallised
+	eachUser = $("#" + UserId).find(".eachUser").first();
+	eachUser.css("position","relative");
+	eachUser.css("left","25%");
+	
+	//remove the onclick function
+	userID = $("#" + UserId).css("cursor","default");
+	userID.attr("onclick","").unbind("click");
+	tdRightWithImage = $("#" + UserId).find(".tdRightWithImage").first();
+	tdRightWithImage.attr("onclick","").unbind("click");
+}
+
+//Make the password field show and disappear
+$(document).ready(function(){
+  $('#password_entry').val('Password');        
+  $('#password_entry').click(function(){ 
+      if($(this).val()=='Password'){
+	$(this).val('');
+	//$(this).css('color','#808080');
+	$(this).css('color','#000000');
+	$(this).attr('type','password')
+       }
+	
+   });
+  $('#password_entry').focus(function(){
+       if($(this).val()=='Password'){
+       	$(this).val('Password');
+	$(this).css('color','#808080');
+        
+       }else{
+	$(this).css('color','#000000');
+       }
+	makeExpandProfileCenter();
+   });
+
+});
+
+document.write('<table id=mainFrame style="margin: auto;position: absolute; left: 50%; top: 60%;"><tr><td>');
+document.write('<table id="user_table">');
+document.write('<tr>');
+
+for (i in lightdm.users)
+{
+   user = lightdm.users[i];
+
+/*   if (user.image.length > 0)
+      image = user.image
+   else
+      image = 'file:///usr/share/icons/gnome/32x32/stock/generic/stock_person.png'
+*/
+
+//Added for local test
+//var user = new Object;
+//user["name"] = "test1";
+//user["display_name"] = "test1";
+
+//! to add curve corner around the div
+
+//each user is a separate column in the td column in the 'user_table'
+document.write('<td id="user_' + user.name +'" onclick="start_authentication(\'' + user.name + '\')" style="cursor: pointer;">');
+	document.write('<table class="eachUser" style="font-size: small;">');
+	document.write('<tr><td><div id="divAboveFrame" style="height:45vh;" /></td></tr>');
+	document.write('<tr>');
+	document.write('<td class="tdRightWithImage" onclick="selectedThisUser(\'user_' + user.name +'\')">');
+	document.write('<div class="frameDiv">'); //New additions
+	document.write('<img class="image1" src="frame.jpg" /><img class="image2" src="defaultuserpic.png" />');
+	document.write('</div>');
+	document.write('</td></tr>');
+	document.write('<tr><td/></tr>');
+	document.write('<tr><td>' + user.display_name +  '</td></tr>');
+	document.write('</table>'); //end of table of eachUser
+document.write('</td></tr></table>');
+
+
+//if (user.name == lightdm.timed_login_user && lightdm.timed_login_delay > 0)
+//       document.write('<td id="countdown_label"></td>');
+
+
+document.write('</td>'); //Edited by LJE
+
+}
+document.write('</tr>'); //Edited by LJE
+document.write('<tr><td style="font-size:small;text-align:center;"><div style="positon: relative; top: -10px;" >Locked</div></td></tr>');
+
+//Popup the password form
+document.write('<tr><td>');
+document.write('<table id="password_table" style="margin: auto; color: red;"><tr>');
+document.write('<td id="password_prompt"></td>');
+document.write('<td><form action="javascript: provide_secret()"><input id="password_entry" style="color:#808080" value="Password" /></form></td>');
+document.write('</tr></table>');
+
+document.write('<tr><td>');
+document.write('<table id="message_table" style="margin: auto; text-align: center;">');
+document.write('<tr><td id="message_label"></td></tr></table>');
+document.write('</td</tr>');
+
+document.write('</td</tr>');
+document.write('</table>');
+
+
+time_remaining = lightdm.timed_login_delay;
+if (time_remaining > 0)
+    countdown();
+
+
+</script>
+</head>
+
+<body>
+</body>
+
+</html>
