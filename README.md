@@ -22,3 +22,9 @@ sudo vi lightdm.conf
 greeter-session=lightdm-webkit-greeter
 
 cd /usr/share/lightdm-webkit/
+
+git clone https://github.com/tweakmy/lightdm-webkit-win7.git win7
+
+sudo reboot
+
+##Do it at your own risk##
